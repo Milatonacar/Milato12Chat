@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Milato12Cat</title>
+  <style>
+    :root {
+      --bg-color: #f2f2f2;
+      --text-color: #000;
+      --bot-color: #4a90e2;
+      --user-bg: #e0e0e0;
+      --bot-bg: #d0e8ff;
+    }
+
+    body.dark {
+      --bg-color: #121212;
+      --text-color: #fff;
+      --bot-color: #6ba3ff;
+      --user-bg: #2c2c2c;
+      --bot-bg: #1e1e2f;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    .chat-container {
+      width: 90%;
+      max-width: 420px;
+      background: white;
+      box-shadow: 0 0 15px rgba(0,0,0,0.15);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .chat-header {
+      background: var(--bot-color);
+      color: white;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .chat-box {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+      max-height: 500px;
+    }
+
+    .message {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    .user .avatar {
+      margin-left: auto;
+      margin-right: 0;
+    }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 12px;
+      max-width: 70%;
+    }
+
+    .user .bubble {
+      background: var(--user-bg);
+      color: var(--text-color);
+      margin-left: auto;
+    }
+
+    .bot .bubble {
+      background: var(--bot-bg);
+      color: var(--text-color);
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+      background: var(--bg-color);
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-color);
+    }
+
+    .chat-input button {
+      padding: 10px 15px;
+      border: none;
+      background: var(--bot-color);
+      color: white;
+      cursor: pointer;
+    }
+
+    .dark-toggle {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      background: #333;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @media screen and (max-width: 480px) {
+      .chat-container {
+        width: 95%;
+        height: 95vh;
+      }
+
+      .chat-box {
+        max-height: none;
+        flex-grow: 1;
+      }
+
+      .chat-input input {
+        font-size: 16px;
+      }
+
+      .chat-input button {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+  <div class="chat-container">
+    <div class="chat-header">Milato12Chat - Assistente Virtual</div>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="chat-input">
+      <input type="text" id="user-input" placeholder="Digite sua pergunta..." onkeydown="if(event.key==='Enter') sendMessage()"/>
+      <button onclick="sendMessage()">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById('chat-box');
+    const apiKey = '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';  // Substitua com sua chave real
+
+    function toggleDarkMode() {
+      document.body.classList.toggle('dark');
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('user-input');
+      const userMessage = input.value.trim();
+      if (userMessage === "") return;
+
+      appendMessage(userMessage, 'user');
+      input.value = "";
+
+      const botResponse = await getResponseFromAPI(userMessage);
+      appendMessage(botResponse, 'bot');
+    }
+
+    function appendMessage(text, sender) {
+      const message = document.createElement('div');
+      message.classList.add('message', sender);
+
+      const avatar = document.createElement('img');
+      avatar.classList.add('avatar');
+      avatar.src = sender === 'user' ? 'https://i.pravatar.cc/32?img=3' : 'https://i.pravatar.cc/32?img=1';
+
+      const bubble = document.createElement('div');
+      bubble.classList.add('bubble');
+      bubble.textContent = text;
+
+      if (sender === 'user') {
+        message.appendChild(bubble);
+        message.appendChild(avatar);
+      } else {
+        message.appendChild(avatar);
+        message.appendChild(bubble);
+      }
+
+      chatBox.appendChild(message);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function getResponseFromAPI(userMessage) {
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-3.5-turbo',
+            messages: [{ role: 'user', content: userMessage }],
+            max_tokens: 150,
+            temperature: 0.7
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.error) {
+          return `Erro: ${data.error.message}`;
+        }
+
+        return data.choices[0].message.content.trim();
+      } catch (err) {
+        return "Erro ao conectar à API. Verifique sua conexão ou chave.";
+      }
+    }
+  </script>
+</body>
+</html>
